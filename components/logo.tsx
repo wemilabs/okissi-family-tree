@@ -5,7 +5,7 @@ export const Logo = () => {
   return (
     <Link href="/">
       <Image
-        src="/okissi.png"
+        src="https://ubrw5iu3hw.ufs.sh/f/TFsxjrtdWsEI2nMSS96OWeVvZR7TyuB8q0wYA9LGpXglijMJ"
         alt="OKISSI"
         width={33}
         height={33}
