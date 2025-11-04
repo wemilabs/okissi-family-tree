@@ -17,7 +17,41 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "OKISSI's Family Tree",
-  description: "Building and visualizing our family heritage",
+  description: "Construisons et visualisons notre héritage familial",
+  metadataBase: new URL("https://okissi-family-tree.vercel.app/"),
+  keywords: ["family", "okissi", "family tree", "genealogy", "family history"],
+  authors: [
+    {
+      name: "Mr T",
+      url: "https://cuttypiedev.vercel.app/",
+    },
+  ],
+  creator: "Mr T",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://okissi-family-tree.vercel.app/",
+    title: "OKISSI's Family Tree",
+    description: "Construisons et visualisons notre héritage familial",
+    siteName: "OKISSI's Family Tree",
+    images: [
+      {
+        url: "https://ubrw5iu3hw.ufs.sh/f/TFsxjrtdWsEI2nMSS96OWeVvZR7TyuB8q0wYA9LGpXglijMJ",
+        width: 1200,
+        height: 630,
+        alt: "OKISSI's Family Tree",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OKISSI's Family Tree",
+    description: "Construisons et visualisons notre héritage familial",
+    images: [
+      "https://ubrw5iu3hw.ufs.sh/f/TFsxjrtdWsEI2nMSS96OWeVvZR7TyuB8q0wYA9LGpXglijMJ",
+    ],
+    creator: "@DorianTho5",
+  },
 };
 
 export default function RootLayout({
