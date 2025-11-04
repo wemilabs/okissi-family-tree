@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db/drizzle";
 import { schema } from "@/db/schema";
 import type {
@@ -82,7 +82,9 @@ export async function addPerson(formData: AddPersonForm): Promise<Person> {
     }
   }
 
-  revalidateTag("family-data", "max");
+  // Revalidate pages to show new person immediately
+  revalidatePath("/tree");
+  revalidatePath("/");
 
   return {
     id: insertedPerson.id,
