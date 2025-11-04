@@ -35,6 +35,8 @@ export async function seedInitialData() {
 
 async function readFamilyData(): Promise<FamilyData> {
   "use cache";
+  cacheTag("family-data");
+  
   const persons = await db.select().from(schema.persons);
   const nextIdResult = await db
     .select()
@@ -62,6 +64,5 @@ async function readFamilyData(): Promise<FamilyData> {
 }
 
 export async function getCachedFamilyData(): Promise<FamilyData> {
-  cacheTag("family-data");
   return await readFamilyData();
 }
