@@ -15,8 +15,9 @@ export interface FamilyData {
 
 export interface AddPersonForm {
   name: string;
-  parentId: string;
+  parentId?: string;
   birthRank: number;
+  generation: number;
 }
 
 export interface FamilyTreeNode extends Person {

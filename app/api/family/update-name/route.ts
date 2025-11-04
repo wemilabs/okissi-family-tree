@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if person exists in DB (UUID format)
     const person = await db
       .select()
       .from(schema.persons)
@@ -29,7 +30,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!person[0]) {
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Cannot update hardcoded family members or person not found" },
+        { status: 404 }
+      );
     }
 
     await db

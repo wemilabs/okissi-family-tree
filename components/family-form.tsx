@@ -47,14 +47,15 @@ function getOrdinalSuffix(num: number): string {
 }
 
 export function FamilyForm({ parents }: FamilyFormProps) {
-  const [selectedParent, setSelectedParent] = useState<string>("");
+  const [selectedParent, setSelectedParent] = useState<string>("none");
+  const [selectedGeneration, setSelectedGeneration] = useState<string>("3");
   const [nextBirthRank, setNextBirthRank] = useState<number>(1);
   const [occupiedRanks, setOccupiedRanks] = useState<number[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleParentChange = async (parentId: string) => {
     setSelectedParent(parentId);
-    if (parentId) {
+    if (parentId && parentId !== "none") {
       const [rank, occupied] = await Promise.all([
         getNextBirthRank(parentId),
         getOccupiedBirthRanks(parentId),
@@ -74,14 +75,16 @@ export function FamilyForm({ parents }: FamilyFormProps) {
     ) => {
       try {
         const name = formData.get("name") as string;
-        const parentId = formData.get("parentId") as string;
+        const parentIdRaw = formData.get("parentId") as string;
+        const parentId = parentIdRaw === "none" ? undefined : parentIdRaw;
         const birthRank = parseInt(formData.get("birthRank") as string, 10);
+        const generation = parseInt(formData.get("generation") as string, 10);
 
-        if (!name || !parentId || !birthRank) {
-          return { error: "Please fill in all fields" };
+        if (!name || !birthRank || !generation) {
+          return { error: "Please fill in all required fields" };
         }
 
-        await addPerson({ name, parentId, birthRank });
+        await addPerson({ name, parentId, birthRank, generation });
         toast.success("Person added successfully!", {
           description: (
             <Link href="/tree" className="underline hover:no-underline">
@@ -91,7 +94,8 @@ export function FamilyForm({ parents }: FamilyFormProps) {
           duration: 5000,
         });
         formRef.current?.reset();
-        setSelectedParent("");
+        setSelectedParent("none");
+        setSelectedGeneration("3");
         setNextBirthRank(1);
         setOccupiedRanks([]);
         return { success: true };
@@ -110,42 +114,104 @@ export function FamilyForm({ parents }: FamilyFormProps) {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Ajouter un petit-enfant</CardTitle>
+        <CardTitle>Ajouter un membre de la famille</CardTitle>
         <CardDescription>
-          Ajouter un nouveau petit-enfant à l'arbre généalogique
+          Ajouter un nouveau membre à l'arbre généalogique
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nom du petit-enfant</Label>
+            <Label htmlFor="name">Nom complet</Label>
             <Input
               id="name"
               name="name"
               type="text"
-              placeholder="Entrez le nom du petit-enfant"
+              placeholder="Entrez le nom complet"
               required
               className="placeholder:text-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="parentId">Fils/Fille de</Label>
+            <Label htmlFor="generation">Génération</Label>
+            <Select
+              name="generation"
+              value={selectedGeneration}
+              onValueChange={setSelectedGeneration}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner la génération" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 - Patriarche/Matriarche</SelectItem>
+                <SelectItem value="2">2 - Parent</SelectItem>
+                <SelectItem value="3">3 - Petit-enfant</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="parentId">Fils/Fille de (optionnel)</Label>
             <Select
               name="parentId"
               value={selectedParent}
               onValueChange={handleParentChange}
-              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner le parent" />
               </SelectTrigger>
               <SelectContent>
-                {parents.map((parent) => (
-                  <SelectItem key={parent.id} value={parent.id}>
-                    {parent.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="none">Aucun (Racine)</SelectItem>
+                
+                {/* Generation 1 */}
+                {parents.filter(p => p.generation === 1).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Génération 1 - Patriarche/Matriarche
+                    </div>
+                    {parents
+                      .filter(p => p.generation === 1)
+                      .map((parent) => (
+                        <SelectItem key={parent.id} value={parent.id}>
+                          {parent.name}
+                        </SelectItem>
+                      ))}
+                  </>
+                )}
+                
+                {/* Generation 2 */}
+                {parents.filter(p => p.generation === 2).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Génération 2 - Parents
+                    </div>
+                    {parents
+                      .filter(p => p.generation === 2)
+                      .map((parent) => (
+                        <SelectItem key={parent.id} value={parent.id}>
+                          {parent.name}
+                        </SelectItem>
+                      ))}
+                  </>
+                )}
+                
+                {/* Generation 3 */}
+                {parents.filter(p => p.generation === 3).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Génération 3 - Petits-enfants
+                    </div>
+                    {parents
+                      .filter(p => p.generation === 3)
+                      .map((parent) => (
+                        <SelectItem key={parent.id} value={parent.id}>
+                          {parent.name}
+                        </SelectItem>
+                      ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -185,7 +251,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
                 })}
               </SelectContent>
             </Select>
-            {selectedParent && (
+            {selectedParent && selectedParent !== "none" && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
                   Suggested: {nextBirthRank}

@@ -9,11 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPersonsByGeneration } from "@/lib/family-actions";
+import { getFamilyData } from "@/lib/family-actions";
 
 async function ParentsList() {
-  const parents = await getPersonsByGeneration(2);
-  return <FamilyForm parents={parents} />;
+  const data = await getFamilyData();
+  // Show all persons as potential parents (they can select by generation in form)
+  const potentialParents = data.persons;
+  return <FamilyForm parents={potentialParents} />;
 }
 
 export default function Home() {
@@ -25,11 +27,10 @@ export default function Home() {
         <main className="max-w-2xl mx-auto mt-20">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-              Ajouter un petit-enfant
+              Ajouter un membre de la famille
             </h2>
             <p className="text-gray-600 dark:text-gray-300">
-              Entrez le nom du petit-enfant et sélectionnez son parent de la
-              deuxième génération
+              Créez votre arbre généalogique en ajoutant des membres de la famille
             </p>
           </div>
 
@@ -37,9 +38,9 @@ export default function Home() {
             fallback={
               <Card className="w-full max-w-md mx-auto">
                 <CardHeader>
-                  <CardTitle>Ajouter un petit-enfant</CardTitle>
+                  <CardTitle>Ajouter un membre de la famille</CardTitle>
                   <CardDescription>
-                    Ajouter un nouveau petit-enfant à l'arbre généalogique
+                    Ajouter un nouveau membre à l'arbre généalogique
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
