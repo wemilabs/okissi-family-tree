@@ -1,29 +1,8 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
-import type { FamilyData } from "@/types/family";
-
-const DATA_FILE = join(process.cwd(), "lib", "family-data.json");
-
-async function readFamilyData(): Promise<FamilyData> {
-  try {
-    const data = await readFile(DATA_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading family data:", error);
-    throw new Error("Failed to read family data");
-  }
-}
-
-async function writeFamilyData(data: FamilyData): Promise<void> {
-  try {
-    await writeFile(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    console.error("Error writing family data:", error);
-    throw new Error("Failed to write family data");
-  }
-}
+import { db } from "@/db/drizzle";
+import { schema } from "@/db/schema";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,20 +22,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await readFamilyData();
-    const person = data.persons.find((p) => p.id === id);
+    const person = await db
+      .select()
+      .from(schema.persons)
+      .where(eq(schema.persons.id, id))
+      .limit(1);
 
-    if (!person) {
+    if (!person[0]) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
-    person.name = name.trim();
-
-    await writeFamilyData(data);
+    await db
+      .update(schema.persons)
+      .set({ name: name.trim() })
+      .where(eq(schema.persons.id, id));
 
     revalidateTag("family-data", "max");
 
-    return NextResponse.json({ success: true, name: person.name });
+    return NextResponse.json({ success: true, name: name.trim() });
   } catch (error) {
     console.error("Error updating person name:", error);
     return NextResponse.json(

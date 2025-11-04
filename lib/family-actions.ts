@@ -1,40 +1,19 @@
 "use server";
 
-import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { cacheTag, revalidateTag } from "next/cache";
+import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import { db } from "@/db/drizzle";
+import { schema } from "@/db/schema";
 import type {
   AddPersonForm,
   FamilyData,
   FamilyTreeNode,
   Person,
 } from "@/types/family";
-
-const DATA_FILE = join(process.cwd(), "lib", "family-data.json");
-
-async function readFamilyData(): Promise<FamilyData> {
-  try {
-    const data = await readFile(DATA_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading family data:", error);
-    throw new Error("Failed to read family data");
-  }
-}
-
-async function writeFamilyData(data: FamilyData): Promise<void> {
-  try {
-    await writeFile(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    console.error("Error writing family data:", error);
-    throw new Error("Failed to write family data");
-  }
-}
+import { getCachedFamilyData } from "./family-cache";
 
 export async function getFamilyData(): Promise<FamilyData> {
-  "use cache";
-  cacheTag("family-data");
-  return await readFamilyData();
+  return await getCachedFamilyData();
 }
 
 export async function getOccupiedBirthRanks(
@@ -54,12 +33,12 @@ export async function getNextBirthRank(parentId: string): Promise<number> {
 }
 
 export async function addPerson(formData: AddPersonForm): Promise<Person> {
-  const data = await readFamilyData();
-
   // Check if birth rank is already occupied
-  const existingSiblings = data.persons.filter(
-    (p) => p.parentId === formData.parentId
-  );
+  const existingSiblings = await db
+    .select()
+    .from(schema.persons)
+    .where(eq(schema.persons.parentId, formData.parentId));
+
   const isRankOccupied = existingSiblings.some(
     (sibling) => sibling.birthRank === formData.birthRank
   );
@@ -70,29 +49,55 @@ export async function addPerson(formData: AddPersonForm): Promise<Person> {
     );
   }
 
-  const newPerson: Person = {
-    id: data.nextId.toString(),
+  // Get next ID
+  const nextIdResult = await db
+    .select()
+    .from(schema.metadata)
+    .where(eq(schema.metadata.key, "next_id"))
+    .limit(1);
+
+  const nextId = nextIdResult[0]?.value ?? 1;
+
+  const newPerson = {
+    id: nextId.toString(),
     name: formData.name.trim(),
     generation: 3,
     parentId: formData.parentId,
-    birthRank: formData.birthRank,
     children: [],
+    birthRank: formData.birthRank,
     createdAt: new Date().toISOString(),
   };
 
-  data.persons.push(newPerson);
+  // Insert new person
+  await db.insert(schema.persons).values({
+    id: nextId.toString(),
+    name: newPerson.name,
+    generation: newPerson.generation,
+    parentId: newPerson.parentId,
+    children: newPerson.children,
+    birthRank: newPerson.birthRank,
+  });
 
-  const parent = data.persons.find((p) => p.id === formData.parentId);
-  if (parent) {
-    if (!parent.children) {
-      parent.children = [];
-    }
-    parent.children.push(newPerson.id);
+  // Update parent's children array
+  const parent = await db
+    .select()
+    .from(schema.persons)
+    .where(eq(schema.persons.id, formData.parentId))
+    .limit(1);
+
+  if (parent[0]) {
+    const currentChildren = parent[0].children || [];
+    await db
+      .update(schema.persons)
+      .set({ children: [...currentChildren, nextId.toString()] })
+      .where(eq(schema.persons.id, formData.parentId));
   }
 
-  data.nextId++;
-
-  await writeFamilyData(data);
+  // Increment next_id
+  await db
+    .update(schema.metadata)
+    .set({ value: nextId + 1 })
+    .where(eq(schema.metadata.key, "next_id"));
 
   revalidateTag("family-data", "max");
 

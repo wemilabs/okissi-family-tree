@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Edit2, X } from "lucide-react";
+import { Check, Edit2, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ function getOrdinalSuffix(num: number): string {
 export function PersonNode({ person }: PersonNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(person.name);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -49,6 +50,7 @@ export function PersonNode({ person }: PersonNodeProps) {
       return;
     }
 
+    setIsSaving(true);
     try {
       const response = await fetch("/api/family/update-name", {
         method: "POST",
@@ -77,6 +79,8 @@ export function PersonNode({ person }: PersonNodeProps) {
         error instanceof Error ? error.message : "Unknown error";
       console.error("Failed to update name:", errorMessage);
       toast.error("Failed to update name", { description: errorMessage });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -141,15 +145,21 @@ export function PersonNode({ person }: PersonNodeProps) {
                     size="sm"
                     variant="ghost"
                     onClick={handleSave}
-                    className="size-6 p-0 text-green-600 hover:text-green-700"
+                    disabled={isSaving}
+                    className="size-6 p-0 text-green-600 hover:text-green-700 disabled:opacity-50"
                   >
-                    <Check className="size-3" />
+                    {isSaving ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <Check className="size-3" />
+                    )}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={handleCancel}
-                    className="size-6 p-0 text-red-600 hover:text-red-700"
+                    disabled={isSaving}
+                    className="size-6 p-0 text-red-600 hover:text-red-700 disabled:opacity-50"
                   >
                     <X className="size-3" />
                   </Button>
