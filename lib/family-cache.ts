@@ -1,12 +1,8 @@
-import { cacheTag } from "next/cache";
 import { db } from "@/db/drizzle";
 import { schema } from "@/db/schema";
 import type { FamilyData, Person } from "@/types/family";
 
 async function readFamilyData(): Promise<FamilyData> {
-  "use cache";
-  cacheTag("family-data");
-
   // Get all persons from database
   const dbPersons = await db.select().from(schema.persons);
 
