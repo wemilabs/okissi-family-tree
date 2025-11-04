@@ -173,6 +173,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
                     </div>
                     {parents
                       .filter(p => p.generation === 1)
+                      .sort((a, b) => (a.birthRank || 0) - (b.birthRank || 0))
                       .map((parent) => (
                         <SelectItem key={parent.id} value={parent.id}>
                           {parent.name}
@@ -189,6 +190,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
                     </div>
                     {parents
                       .filter(p => p.generation === 2)
+                      .sort((a, b) => (a.birthRank || 0) - (b.birthRank || 0))
                       .map((parent) => (
                         <SelectItem key={parent.id} value={parent.id}>
                           {parent.name}
@@ -205,6 +207,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
                     </div>
                     {parents
                       .filter(p => p.generation === 3)
+                      .sort((a, b) => (a.birthRank || 0) - (b.birthRank || 0))
                       .map((parent) => (
                         <SelectItem key={parent.id} value={parent.id}>
                           {parent.name}
