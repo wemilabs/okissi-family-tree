@@ -1,12 +1,10 @@
-"use cache";
-
 import { cacheTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { initialFamilyData, initialNextId, schema } from "@/db/schema";
 import type { FamilyData, Person } from "@/types/family";
 
-async function seedInitialData() {
+export async function seedInitialData() {
   // Check if data already exists
   const existingPersons = await db.select().from(schema.persons).limit(1);
   if (existingPersons.length > 0) return; // Already seeded
@@ -36,6 +34,7 @@ async function seedInitialData() {
 }
 
 async function readFamilyData(): Promise<FamilyData> {
+  "use cache";
   const persons = await db.select().from(schema.persons);
   const nextIdResult = await db
     .select()
@@ -64,9 +63,5 @@ async function readFamilyData(): Promise<FamilyData> {
 
 export async function getCachedFamilyData(): Promise<FamilyData> {
   cacheTag("family-data");
-
-  // Seed initial data if database is empty
-  await seedInitialData();
-
   return await readFamilyData();
 }

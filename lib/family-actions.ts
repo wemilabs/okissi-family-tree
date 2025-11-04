@@ -10,9 +10,10 @@ import type {
   FamilyTreeNode,
   Person,
 } from "@/types/family";
-import { getCachedFamilyData } from "./family-cache";
+import { getCachedFamilyData, seedInitialData } from "./family-cache";
 
 export async function getFamilyData(): Promise<FamilyData> {
+  await seedInitialData();
   return await getCachedFamilyData();
 }
 
