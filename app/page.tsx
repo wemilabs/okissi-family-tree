@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { FamilyForm } from "@/components/family-form";
-import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
 import {
   Card,
   CardContent,
@@ -22,12 +20,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
-        <header className="flex items-center justify-between">
-          <Logo />
-          <Link href="/tree">
-            <Button size="lg">Voir l'arbre</Button>
-          </Link>
-        </header>
+        <Header />
 
         <main className="max-w-2xl mx-auto mt-20">
           <div className="text-center mb-6">

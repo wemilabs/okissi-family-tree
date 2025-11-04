@@ -7,8 +7,8 @@ export const Logo = () => {
       <Image
         src="/okissi.png"
         alt="OKISSI"
-        width={42}
-        height={42}
+        width={33}
+        height={33}
         className="rounded-md"
       />
     </Link>

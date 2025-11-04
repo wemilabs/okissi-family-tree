@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { FamilyTree } from "@/components/family-tree";
-import { Logo } from "@/components/logo";
+import { Header } from "@/components/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildFamilyTree, getFamilyData } from "@/lib/family-actions";
 
@@ -13,13 +13,8 @@ async function FamilyTreeData() {
 export default function TreePage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-2">
-          <Logo />
-          <p className="text-lg text-gray-600 dark:text-gray-300 mt-4">
-            Vue de l&apos;arbre généalogique
-          </p>
-        </header>
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <Header />
 
         <main className="w-full">
           <Suspense
