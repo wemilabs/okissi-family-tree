@@ -343,7 +343,7 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
     <div className="w-full pb-8">
       <div className="container mx-auto py-8">
         {/* View Selector */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex justify-between items-center mb-6 gap-4">
           <div className="flex items-center gap-2">
             <Select
               value={view}
@@ -360,6 +360,9 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="text-sm">
+            Compteur: {view === "all" ? allPersons.length : filteredTree.length}
           </div>
         </div>
 

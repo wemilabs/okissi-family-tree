@@ -19,7 +19,7 @@ async function readFamilyData(): Promise<FamilyData> {
 
   return {
     persons,
-    nextId: 0, // Not used anymore
+    nextId: 0,
   };
 }
 
