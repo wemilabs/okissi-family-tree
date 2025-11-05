@@ -30,7 +30,7 @@ export default function Home() {
               Construisons et visualisons notre héritage familial
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              version 0.1.5 -- it&apos;s just the beginning
+              version 0.1.8 -- it&apos;s just the beginning
             </p>
           </div>
 
