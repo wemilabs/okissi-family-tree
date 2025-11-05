@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/drizzle";
 import { schema } from "@/db/schema";
 import type {
-  AddPersonForm,
+  addFamilyMemberForm,
   FamilyData,
   FamilyTreeNode,
   Person,
@@ -32,7 +32,9 @@ export async function getNextBirthRank(parentId: string): Promise<number> {
   return siblings.length + 1;
 }
 
-export async function addPerson(formData: AddPersonForm): Promise<Person> {
+export async function addFamilyMember(
+  formData: addFamilyMemberForm
+): Promise<Person> {
   // Check if birth rank is already occupied (only if parent specified)
   if (formData.parentId) {
     const existingSiblings = await db

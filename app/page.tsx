@@ -27,10 +27,10 @@ export default function Home() {
         <main className="max-w-2xl mx-auto mt-20">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-              Ajouter un membre de la famille
+              Construisons et visualisons notre héritage familial
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Créez votre arbre généalogique en ajoutant des membres de la famille
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
+              version 0.1.5 -- it&apos;s just the beginning
             </p>
           </div>
 

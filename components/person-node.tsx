@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getGenerationLabel } from "@/lib/utils";
 import type { FamilyTreeNode } from "@/types/family";
 
 interface PersonNodeProps {
@@ -109,23 +110,10 @@ export function PersonNode({ person }: PersonNodeProps) {
     }
   };
 
-  const getGenerationLabel = (generation: number, birthRank?: number) => {
-    switch (generation) {
-      case 1:
-        return birthRank === 1 ? "Patriarche" : "Matriarche";
-      case 2:
-        return "Parent";
-      case 3:
-        return "Petit-enfant";
-      default:
-        return `Génération ${generation}`;
-    }
-  };
-
   return (
     <div className="flex flex-col items-center">
       <Card
-        className={`w-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${getGenerationColor(
+        className={`w-44 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${getGenerationColor(
           person.generation
         )}`}
       >

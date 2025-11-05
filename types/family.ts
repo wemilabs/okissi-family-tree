@@ -13,7 +13,7 @@ export interface FamilyData {
   nextId: number;
 }
 
-export interface AddPersonForm {
+export interface addFamilyMemberForm {
   name: string;
   parentId?: string;
   birthRank: number;

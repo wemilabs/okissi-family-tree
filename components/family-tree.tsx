@@ -13,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getGenerationLabel } from "@/lib/utils";
 import type { FamilyTreeNode, Person } from "@/types/family";
 import { PersonNode } from "./person-node";
 
-type FamilyView = "all" | "patriarchs" | "parents" | "grandchildren";
+type FamilyView = string;
 
 interface FamilyTreeProps {
   tree: FamilyTreeNode[];
@@ -204,19 +205,6 @@ function getOrdinalSuffix(num: number): string {
   return "th";
 }
 
-function getGenerationLabel(generation: number, birthRank?: number) {
-  switch (generation) {
-    case 1:
-      return birthRank === 1 ? "Patriarche" : "Matriarche";
-    case 2:
-      return "Parent";
-    case 3:
-      return "Petit-enfant";
-    default:
-      return `Génération ${generation}`;
-  }
-}
-
 function TreeNode({ node, level }: { node: FamilyTreeNode; level: number }) {
   const hasChildren = node.childrenNodes && node.childrenNodes.length > 0;
 
@@ -275,16 +263,34 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
     );
   }
 
-  const viewLabels = {
+  const viewLabels: Record<string, string> = {
     all: "Toute la famille",
     patriarchs: "Les Patriarches",
     parents: "Les Enfants",
     grandchildren: "Les Petits-Enfants",
-  } as const;
+  };
+
+  // Compute max generation dynamically
+  const maxGen =
+    allPersons.length > 0
+      ? Math.max(...allPersons.map((p) => p.generation))
+      : 3;
+
+  // Add dynamic labels for generations 4 and above
+  for (let gen = 4; gen <= maxGen; gen++) {
+    const baseLabel = getGenerationLabel(gen);
+    const pluralLabel =
+      gen === 4
+        ? "Arrière-Petits-Enfants"
+        : gen === 5
+        ? "Arrière-Arrière-Petits-Enfants"
+        : `${baseLabel}s`;
+    viewLabels[`generation-${gen}`] = `Les ${pluralLabel}`;
+  }
 
   // Find the specific grandparents
-  const patriarche = tree.find((node) => node.name.includes("Joseph"));
-  const matriarche = tree.find((node) => node.name.includes("Anne-Marie"));
+  const patriarch = tree.find((node) => node.name.includes("Joseph"));
+  const matriarch = tree.find((node) => node.name.includes("Anne-Marie"));
 
   // Filter the tree based on the current view
   const getFilteredTree = () => {
@@ -292,7 +298,7 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
 
     if (view === "patriarchs") {
       // Get only the patriarchs without their children trees
-      return [patriarche, matriarche]
+      return [patriarch, matriarch]
         .filter(Boolean)
         .map((node) => ({ ...node, childrenNodes: [] } as FamilyTreeNode));
     }
@@ -300,8 +306,8 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
     if (view === "parents") {
       // Get all direct children of the patriarchs
       const parentIds = new Set([
-        ...(patriarche?.children || []),
-        ...(matriarche?.children || []),
+        ...(patriarch?.children || []),
+        ...(matriarch?.children || []),
       ]);
       return allPersons
         .filter((node) => parentIds.has(node.id))
@@ -316,6 +322,18 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
         .map((person) => ({ ...person, childrenNodes: [] } as FamilyTreeNode));
     }
 
+    // Handle dynamic generation views (e.g., "generation-4", "generation-5", etc.)
+    if (view.startsWith("generation-")) {
+      const gen = parseInt(view.split("-")[1], 10);
+      if (!Number.isNaN(gen)) {
+        return allPersons
+          .filter((node) => node.generation === gen)
+          .map(
+            (person) => ({ ...person, childrenNodes: [] } as FamilyTreeNode)
+          );
+      }
+    }
+
     return tree;
   };
 
@@ -323,7 +341,7 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
 
   return (
     <div className="w-full pb-8">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto py-8">
         {/* View Selector */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <div className="flex items-center gap-2">
@@ -335,14 +353,11 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
                 <SelectValue placeholder="Sélectionner une vue" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{viewLabels.all}</SelectItem>
-                <SelectItem value="patriarchs">
-                  {viewLabels.patriarchs}
-                </SelectItem>
-                <SelectItem value="parents">{viewLabels.parents}</SelectItem>
-                <SelectItem value="grandchildren">
-                  {viewLabels.grandchildren}
-                </SelectItem>
+                {Object.entries(viewLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -355,8 +370,8 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
               <div className="flex gap-3 md:gap-4 lg:gap-6 justify-center">
                 {view === "all" ? (
                   <>
-                    {patriarche && <TreeNode node={patriarche} level={0} />}
-                    {matriarche && <TreeNode node={matriarche} level={0} />}
+                    {patriarch && <TreeNode node={patriarch} level={0} />}
+                    {matriarch && <TreeNode node={matriarch} level={0} />}
                   </>
                 ) : (
                   <div className="flex flex-wrap gap-4 justify-center">
@@ -383,12 +398,8 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
               <div className="space-y-2">
                 {view === "all" ? (
                   <>
-                    {patriarche && (
-                      <MobileTreeNode node={patriarche} level={0} />
-                    )}
-                    {matriarche && (
-                      <MobileTreeNode node={matriarche} level={0} />
-                    )}
+                    {patriarch && <MobileTreeNode node={patriarch} level={0} />}
+                    {matriarch && <MobileTreeNode node={matriarch} level={0} />}
                   </>
                 ) : (
                   filteredTree.map((node) => (
@@ -400,20 +411,28 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
           </Card>
         </div>
 
-        {/* Legend - Responsive */}
+        {/* Legend - Responsive and Dynamic */}
         <div className="flex flex-wrap justify-center gap-4 md:gap-8 mt-8 lg:mt-16 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="size-4 bg-purple-100 border border-purple-300 rounded-full"></div>
-            <span className="font-medium">Patriarches</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="size-4 bg-blue-100 border border-blue-300 rounded-full"></div>
-            <span className="font-medium">Parents</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="size-4 bg-green-100 border border-green-300 rounded-full"></div>
-            <span className="font-medium">Petits-enfants</span>
-          </div>
+          {Array.from(new Set(allPersons.map((p) => p.generation)))
+            .sort((a, b) => a - b)
+            .map((gen) => {
+              const colorClass =
+                gen === 1
+                  ? "bg-purple-100 border border-purple-300"
+                  : gen === 2
+                  ? "bg-blue-100 border border-blue-300"
+                  : gen === 3
+                  ? "bg-green-100 border border-green-300"
+                  : "bg-gray-100 border border-gray-300";
+              return (
+                <div key={gen} className="flex items-center gap-2">
+                  <div className={`size-4 ${colorClass} rounded-full`}></div>
+                  <span className="font-medium">
+                    {gen === 1 ? "Patriarches" : `${getGenerationLabel(gen)}s`}
+                  </span>
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>
