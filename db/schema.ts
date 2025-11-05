@@ -3,7 +3,7 @@ import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const persons = pgTable("persons", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
+  name: text("name").unique().notNull(),
   generation: integer("generation").notNull(),
   parentId: text("parent_id"),
   children: text("children")
