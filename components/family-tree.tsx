@@ -305,7 +305,8 @@ export function FamilyTree({ tree, allPersons }: FamilyTreeProps) {
       ]);
       return allPersons
         .filter((node) => parentIds.has(node.id))
-        .map((person) => ({ ...person, childrenNodes: [] } as FamilyTreeNode)); // Convert to FamilyTreeNode
+        .sort((a, b) => (a.birthRank || 0) - (b.birthRank || 0))
+        .map((person) => ({ ...person, childrenNodes: [] } as FamilyTreeNode));
     }
 
     if (view === "grandchildren") {
