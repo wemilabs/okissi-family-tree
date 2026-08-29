@@ -1,36 +1,11 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { db } from "@/db/drizzle";
 import { schema } from "@/db/schema";
-import type {
-  addFamilyMemberForm,
-  FamilyData,
-  FamilyTreeNode,
-  Person,
-} from "@/types/family";
-import { getCachedFamilyData } from "./family-cache";
-
-export async function getFamilyData(): Promise<FamilyData> {
-  return await getCachedFamilyData();
-}
-
-export async function getOccupiedBirthRanks(
-  parentId: string
-): Promise<number[]> {
-  const data = await getFamilyData();
-  const siblings = data.persons.filter((p) => p.parentId === parentId);
-  return siblings
-    .map((sibling) => sibling.birthRank)
-    .filter((rank) => rank !== undefined) as number[];
-}
-
-export async function getNextBirthRank(parentId: string): Promise<number> {
-  const data = await getFamilyData();
-  const siblings = data.persons.filter((p) => p.parentId === parentId);
-  return siblings.length + 1;
-}
+import type { addFamilyMemberForm, Person } from "@/types/family";
+import { FAMILY_DATA_TAG } from "./family-queries";
 
 export async function addFamilyMember(
   formData: addFamilyMemberForm
@@ -84,9 +59,7 @@ export async function addFamilyMember(
     }
   }
 
-  // Revalidate pages to show new person immediately
-  revalidatePath("/tree");
-  revalidatePath("/");
+  updateTag(FAMILY_DATA_TAG);
 
   return {
     id: insertedPerson.id,
@@ -99,49 +72,32 @@ export async function addFamilyMember(
   };
 }
 
-export async function getPersonsByGeneration(
-  generation: number
-): Promise<Person[]> {
-  const data = await getFamilyData();
-  return data.persons.filter((person) => person.generation === generation);
-}
+export async function updatePersonName(
+  id: string,
+  name: string
+): Promise<{ name: string }> {
+  const trimmedName = name.trim();
 
-export async function getPersonById(id: string): Promise<Person | null> {
-  const data = await getFamilyData();
-  return data.persons.find((person) => person.id === id) || null;
-}
+  if (!id || trimmedName.length === 0) {
+    throw new Error("ID and name are required");
+  }
 
-export async function getChildrenCount(personId: string): Promise<number> {
-  const data = await getFamilyData();
-  const person = data.persons.find((p) => p.id === personId);
-  return person?.children?.length || 0;
-}
+  const person = await db
+    .select()
+    .from(schema.persons)
+    .where(eq(schema.persons.id, id))
+    .limit(1);
 
-export async function buildFamilyTree(): Promise<FamilyTreeNode[]> {
-  const data = await getFamilyData();
-  const personMap = new Map<string, FamilyTreeNode>();
+  if (!person[0]) {
+    throw new Error("Person not found");
+  }
 
-  data.persons.forEach((person) => {
-    personMap.set(person.id, { ...person, childrenNodes: [] });
-  });
+  await db
+    .update(schema.persons)
+    .set({ name: trimmedName })
+    .where(eq(schema.persons.id, id));
 
-  // Build the tree structure
-  const roots: FamilyTreeNode[] = [];
+  updateTag(FAMILY_DATA_TAG);
 
-  personMap.forEach((node) => {
-    if (node.parentId) {
-      const parent = personMap.get(node.parentId);
-      if (parent) {
-        parent.childrenNodes.push(node);
-        // Sort children by birth rank
-        parent.childrenNodes.sort(
-          (a, b) => (a.birthRank || 0) - (b.birthRank || 0)
-        );
-      }
-    } else {
-      roots.push(node);
-    }
-  });
-
-  return roots;
+  return { name: trimmedName };
 }

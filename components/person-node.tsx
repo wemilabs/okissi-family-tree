@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { updatePersonName } from "@/lib/family-actions";
 import { getGenerationLabel } from "@/lib/utils";
 import type { FamilyTreeNode } from "@/types/family";
 
@@ -53,28 +54,13 @@ export function PersonNode({ person }: PersonNodeProps) {
 
     setIsSaving(true);
     try {
-      const response = await fetch("/api/family/update-name", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: person.id,
-          name: editedName.trim(),
-        }),
-      });
+      const { name } = await updatePersonName(person.id, editedName);
 
-      if (response.ok) {
-        toast.success("Done", {
-          description: "Name updated successfully",
-        });
-        person.name = editedName.trim();
-        setIsEditing(false);
-      } else {
-        toast.error("Failed to update name", {
-          description: "Please try again later",
-        });
-      }
+      toast.success("Done", {
+        description: "Name updated successfully",
+      });
+      person.name = name;
+      setIsEditing(false);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

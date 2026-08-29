@@ -27,12 +27,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { addFamilyMember } from "@/lib/family-actions";
 import {
-  addFamilyMember,
+  cn,
+  getGenerationLabel,
   getNextBirthRank,
   getOccupiedBirthRanks,
-} from "@/lib/family-actions";
-import { cn, getGenerationLabel } from "@/lib/utils";
+} from "@/lib/utils";
 import type { Person } from "@/types/family";
 
 interface FamilyFormProps {
@@ -137,19 +138,15 @@ export function FamilyForm({ parents }: FamilyFormProps) {
     birthRankOptions.find((option) => option.value === selectedBirthRank)
       ?.label || "Sélectionner l'ordre de naissance";
 
-  const handleParentChange = async (parentId: string) => {
+  const handleParentChange = (parentId: string) => {
     setSelectedParent(parentId);
     if (parentId && parentId !== "none") {
       const parent = parents.find((p) => p.id === parentId);
       if (parent) {
         setSelectedGeneration((parent.generation + 1).toString());
       }
-      const [rank, occupied] = await Promise.all([
-        getNextBirthRank(parentId),
-        getOccupiedBirthRanks(parentId),
-      ]);
-      setNextBirthRank(rank);
-      setOccupiedRanks(occupied);
+      setNextBirthRank(getNextBirthRank(parents, parentId));
+      setOccupiedRanks(getOccupiedBirthRanks(parents, parentId));
     } else {
       setSelectedGeneration("1");
       setNextBirthRank(1);
