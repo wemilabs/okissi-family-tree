@@ -1,11 +1,19 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { db } from "@/db/drizzle";
 import { schema } from "@/db/schema";
 import type { addFamilyMemberForm, Person } from "@/types/family";
 import { FAMILY_DATA_TAG } from "./family-queries";
+
+// updateTag expires the cached reads, but prefetched App Shells of other routes
+// are only refreshed by path invalidation.
+function invalidateFamilyData() {
+  updateTag(FAMILY_DATA_TAG);
+  revalidatePath("/");
+  revalidatePath("/tree");
+}
 
 export async function addFamilyMember(
   formData: addFamilyMemberForm
@@ -59,7 +67,7 @@ export async function addFamilyMember(
     }
   }
 
-  updateTag(FAMILY_DATA_TAG);
+  invalidateFamilyData();
 
   return {
     id: insertedPerson.id,
@@ -97,7 +105,7 @@ export async function updatePersonName(
     .set({ name: trimmedName })
     .where(eq(schema.persons.id, id));
 
-  updateTag(FAMILY_DATA_TAG);
+  invalidateFamilyData();
 
   return { name: trimmedName };
 }
