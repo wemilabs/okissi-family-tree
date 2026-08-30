@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronRight, Edit2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { updatePersonName } from "@/lib/family-actions";
 import { getGenerationLabel } from "@/lib/utils";
 import type { FamilyTreeNode, Person } from "@/types/family";
 import { PersonNode } from "./person-node";
@@ -34,6 +36,7 @@ function MobileTreeNode({ node, level }: MobileTreeNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(node.name);
   const hasChildren = node.childrenNodes && node.childrenNodes.length > 0;
+  const router = useRouter();
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -52,28 +55,14 @@ function MobileTreeNode({ node, level }: MobileTreeNodeProps) {
     }
 
     try {
-      const response = await fetch("/api/family/update-name", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: node.id,
-          name: editedName.trim(),
-        }),
-      });
+      const { name } = await updatePersonName(node.id, editedName);
 
-      if (response.ok) {
-        toast.success("Done", {
-          description: "Name updated successfully",
-        });
-        node.name = editedName.trim();
-        setIsEditing(false);
-      } else {
-        toast.error("Failed to update name", {
-          description: "Please try again later",
-        });
-      }
+      toast.success("Done", {
+        description: "Name updated successfully",
+      });
+      node.name = name;
+      setIsEditing(false);
+      router.refresh();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

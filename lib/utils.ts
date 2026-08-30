@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Person } from "@/types/family";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,4 +19,18 @@ export function getGenerationLabel(generation: number, birthRank?: number) {
     default:
       return `Génération ${generation}`;
   }
+}
+
+export function getOccupiedBirthRanks(
+  persons: Person[],
+  parentId: string
+): number[] {
+  return persons
+    .filter((person) => person.parentId === parentId)
+    .map((sibling) => sibling.birthRank)
+    .filter((rank): rank is number => rank !== undefined);
+}
+
+export function getNextBirthRank(persons: Person[], parentId: string): number {
+  return persons.filter((person) => person.parentId === parentId).length + 1;
 }

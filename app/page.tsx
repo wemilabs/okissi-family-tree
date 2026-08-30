@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFamilyData } from "@/lib/family-actions";
+import { getFamilyData } from "@/lib/family-queries";
 
 async function ParentsList() {
   const data = await getFamilyData();

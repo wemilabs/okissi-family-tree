@@ -2,6 +2,7 @@
 
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,12 +28,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { addFamilyMember } from "@/lib/family-actions";
 import {
-  addFamilyMember,
+  cn,
+  getGenerationLabel,
   getNextBirthRank,
   getOccupiedBirthRanks,
-} from "@/lib/family-actions";
-import { cn, getGenerationLabel } from "@/lib/utils";
+} from "@/lib/utils";
 import type { Person } from "@/types/family";
 
 interface FamilyFormProps {
@@ -66,6 +68,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
   );
   const [birthRankOpen, setBirthRankOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   // Reset parent to none if generation is 1
   useEffect(() => {
@@ -137,19 +140,15 @@ export function FamilyForm({ parents }: FamilyFormProps) {
     birthRankOptions.find((option) => option.value === selectedBirthRank)
       ?.label || "Sélectionner l'ordre de naissance";
 
-  const handleParentChange = async (parentId: string) => {
+  const handleParentChange = (parentId: string) => {
     setSelectedParent(parentId);
     if (parentId && parentId !== "none") {
       const parent = parents.find((p) => p.id === parentId);
       if (parent) {
         setSelectedGeneration((parent.generation + 1).toString());
       }
-      const [rank, occupied] = await Promise.all([
-        getNextBirthRank(parentId),
-        getOccupiedBirthRanks(parentId),
-      ]);
-      setNextBirthRank(rank);
-      setOccupiedRanks(occupied);
+      setNextBirthRank(getNextBirthRank(parents, parentId));
+      setOccupiedRanks(getOccupiedBirthRanks(parents, parentId));
     } else {
       setSelectedGeneration("1");
       setNextBirthRank(1);
@@ -187,6 +186,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
         setSelectedGeneration("1");
         setNextBirthRank(1);
         setOccupiedRanks([]);
+        router.refresh();
         return { success: true };
       } catch (error) {
         toast.error("Failed to add person", {

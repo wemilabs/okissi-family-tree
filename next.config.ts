@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "ubrw5iu3hw.ufs.sh" }],
   },
+  partialPrefetching: true,
   reactCompiler: true,
   typedRoutes: true,
 };

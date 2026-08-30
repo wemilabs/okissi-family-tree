@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { Logo } from "./logo";
 import { ModeToggle } from "./mode-toggle";
+import { NavLink } from "./nav-link";
 
 export const Header = () => (
   <header className="flex items-center justify-between">
     <Logo />
-    <Link href="/tree" className="font-medium hover:underline">
-      Voir l'arbre
-    </Link>
+    <NavLink href="/tree">Voir l'arbre</NavLink>
     <ModeToggle />
   </header>
 );
