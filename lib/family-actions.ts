@@ -7,8 +7,8 @@ import { schema } from "@/db/schema";
 import type { addFamilyMemberForm, Person } from "@/types/family";
 import { FAMILY_DATA_TAG } from "./family-queries";
 
-// updateTag expires the cached reads, but prefetched App Shells of other routes
-// are only refreshed by path invalidation.
+// Server-side only: callers must also call router.refresh() so the client
+// router cache drops its payload for the other route.
 function invalidateFamilyData() {
   updateTag(FAMILY_DATA_TAG);
   revalidatePath("/");

@@ -2,6 +2,7 @@
 
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
   );
   const [birthRankOpen, setBirthRankOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   // Reset parent to none if generation is 1
   useEffect(() => {
@@ -184,6 +186,7 @@ export function FamilyForm({ parents }: FamilyFormProps) {
         setSelectedGeneration("1");
         setNextBirthRank(1);
         setOccupiedRanks([]);
+        router.refresh();
         return { success: true };
       } catch (error) {
         toast.error("Failed to add person", {

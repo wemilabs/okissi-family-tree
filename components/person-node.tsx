@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Edit2, Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,7 @@ export function PersonNode({ person }: PersonNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(person.name);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -61,6 +63,7 @@ export function PersonNode({ person }: PersonNodeProps) {
       });
       person.name = name;
       setIsEditing(false);
+      router.refresh();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

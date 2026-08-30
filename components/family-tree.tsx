@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronRight, Edit2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ function MobileTreeNode({ node, level }: MobileTreeNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(node.name);
   const hasChildren = node.childrenNodes && node.childrenNodes.length > 0;
+  const router = useRouter();
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -60,6 +62,7 @@ function MobileTreeNode({ node, level }: MobileTreeNodeProps) {
       });
       node.name = name;
       setIsEditing(false);
+      router.refresh();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
